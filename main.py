@@ -101,128 +101,286 @@ def predict(customer: CustomerData):
 
 @app.get("/test", response_class=HTMLResponse)
 def interactive_tester():
-    """Interactive in-browser testing UI."""
-    return """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>Customer Churn Predictor</title>
-      <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; padding: 30px; margin: 0; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        h2 { margin-top: 0; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .form-group { margin-bottom: 14px; }
-        label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; color: #475569; }
-        input, select { width: 100%; box-sizing: border-box; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
-        button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
-        button:hover { background: #1d4ed8; }
-        #result { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
-        .high-risk { background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; }
-        .low-risk { background: #dcfce7; border: 1px solid #22c55e; color: #166534; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h2>Customer Churn Predictor</h2>
-        <div class="form-group">
-          <label>Tenure (Months with company)</label>
-          <input type="number" id="tenure" value="3">
-        </div>
-        <div class="form-group">
-          <label>Monthly Charges ($)</label>
-          <input type="number" step="0.01" id="MonthlyCharges" value="85.50">
-        </div>
-        <div class="form-group">
-          <label>Total Charges ($)</label>
-          <input type="number" step="0.01" id="TotalCharges" value="256.50">
-        </div>
-        <div class="form-group">
-          <label>Contract Type</label>
-          <select id="Contract">
-            <option value="Month-to-month" selected>Month-to-month</option>
-            <option value="One year">One year</option>
-            <option value="Two year">Two year</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Internet Service</label>
-          <select id="InternetService">
-            <option value="Fiber optic" selected>Fiber optic</option>
-            <option value="DSL">DSL</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Online Security</label>
-          <select id="OnlineSecurity">
-            <option value="No" selected>No</option>
-            <option value="Yes">Yes</option>
-            <option value="No internet service">No internet service</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Tech Support</label>
-          <select id="TechSupport">
-            <option value="No" selected>No</option>
-            <option value="Yes">Yes</option>
-            <option value="No internet service">No internet service</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Paperless Billing</label>
-          <select id="PaperlessBilling">
-            <option value="Yes" selected>Yes</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Payment Method</label>
-          <select id="PaymentMethod">
-            <option value="Electronic check" selected>Electronic check</option>
-            <option value="Mailed check">Mailed check</option>
-            <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
-            <option value="Credit card (automatic)">Credit card (automatic)</option>
-          </select>
-        </div>
-        <button onclick="runPredict()">Predict Churn</button>
-        <div id="result"></div>
+    """Minimal, clean interactive test interface for assignment demonstration."""
+    return """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Customer Churn Prediction</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    .card {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+    }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      color: #0f172a;
+    }
+    .status-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: #e2e8f0;
+      color: #64748b;
+    }
+    .status-badge.online {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .status-badge.offline {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    p.subtitle {
+      color: #64748b;
+      font-size: 14px;
+      margin-top: 4px;
+      margin-bottom: 22px;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 4px;
+    }
+    input[type="number"], select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 9px 12px;
+      font-size: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #0f172a;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+      background: #2563eb;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    button:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+    #result-box {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 6px;
+      display: none;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .result-churn {
+      background: #fef2f2;
+      border: 1px solid #f87171;
+      color: #991b1b;
+    }
+    .result-retained {
+      background: #f0fdf4;
+      border: 1px solid #4ade80;
+      color: #166534;
+    }
+    .result-error {
+      background: #fffbeb;
+      border: 1px solid #facc15;
+      color: #92400e;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header-row">
+      <h2>Customer Churn Prediction</h2>
+      <span id="api-status" class="status-badge">Checking...</span>
+    </div>
+    <p class="subtitle">Enter customer details to estimate churn risk.</p>
+
+    <form id="churn-form" onsubmit="event.preventDefault(); predictChurn();">
+      <div class="form-group">
+        <label for="tenure">Tenure (months)</label>
+        <input type="number" id="tenure" min="0" max="120" value="2" required>
       </div>
-      <script>
-        async function runPredict() {
-          const payload = {
-            tenure: parseInt(document.getElementById('tenure').value),
-            MonthlyCharges: parseFloat(document.getElementById('MonthlyCharges').value),
-            TotalCharges: parseFloat(document.getElementById('TotalCharges').value),
-            Contract: document.getElementById('Contract').value,
-            InternetService: document.getElementById('InternetService').value,
-            OnlineSecurity: document.getElementById('OnlineSecurity').value,
-            TechSupport: document.getElementById('TechSupport').value,
-            PaperlessBilling: document.getElementById('PaperlessBilling').value,
-            PaymentMethod: document.getElementById('PaymentMethod').value
-          };
-          try {
-            const res = await fetch('/predict', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            const resBox = document.getElementById('result');
-            resBox.style.display = 'block';
-            if (res.ok) {
-              resBox.className = data.churn_prediction === 1 ? 'high-risk' : 'low-risk';
-              resBox.innerHTML = `<strong>Result:</strong> ${data.churn_label} (Risk: ${data.risk_level})<br>` +
-                                 `<strong>Churn Probability:</strong> ${(data.churn_probability * 100).toFixed(1)}%`;
-            } else {
-              resBox.className = 'high-risk';
-              resBox.innerText = 'Error: ' + JSON.stringify(data);
-            }
-          } catch (err) {
-            alert('Request failed: ' + err);
-          }
+
+      <div class="form-group">
+        <label for="MonthlyCharges">Monthly Charges ($)</label>
+        <input type="number" id="MonthlyCharges" step="0.01" min="0" value="89.90" required>
+      </div>
+
+      <div class="form-group">
+        <label for="TotalCharges">Total Charges ($)</label>
+        <input type="number" id="TotalCharges" step="0.01" min="0" value="179.80" required>
+      </div>
+
+      <div class="form-group">
+        <label for="Contract">Contract</label>
+        <select id="Contract">
+          <option value="Month-to-month" selected>Month-to-month</option>
+          <option value="One year">One year</option>
+          <option value="Two year">Two year</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="InternetService">Internet Service</label>
+        <select id="InternetService">
+          <option value="Fiber optic" selected>Fiber optic</option>
+          <option value="DSL">DSL</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="OnlineSecurity">Online Security</label>
+        <select id="OnlineSecurity">
+          <option value="No" selected>No</option>
+          <option value="Yes">Yes</option>
+          <option value="No internet service">No internet service</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="TechSupport">Tech Support</label>
+        <select id="TechSupport">
+          <option value="No" selected>No</option>
+          <option value="Yes">Yes</option>
+          <option value="No internet service">No internet service</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="PaperlessBilling">Paperless Billing</label>
+        <select id="PaperlessBilling">
+          <option value="Yes" selected>Yes</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="PaymentMethod">Payment Method</label>
+        <select id="PaymentMethod">
+          <option value="Electronic check" selected>Electronic check</option>
+          <option value="Mailed check">Mailed check</option>
+          <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
+          <option value="Credit card (automatic)">Credit card (automatic)</option>
+        </select>
+      </div>
+
+      <button type="submit" id="btn-predict">Predict Churn</button>
+    </form>
+
+    <div id="result-box"></div>
+  </div>
+
+  <script>
+    // Check health status on page load
+    async function checkHealth() {
+      const badge = document.getElementById('api-status');
+      try {
+        const res = await fetch('/health');
+        const data = await res.json();
+        if (data.status === 'ok' && data.model_loaded === true) {
+          badge.textContent = '● API Online';
+          badge.className = 'status-badge online';
+        } else {
+          badge.textContent = '● API Unavailable';
+          badge.className = 'status-badge offline';
         }
-      </script>
-    </body>
-    </html>
-    """
+      } catch (e) {
+        badge.textContent = '● API Unavailable';
+        badge.className = 'status-badge offline';
+      }
+    }
+    checkHealth();
+
+    // Perform prediction
+    async function predictChurn() {
+      const btn = document.getElementById('btn-predict');
+      const resultBox = document.getElementById('result-box');
+
+      btn.disabled = true;
+      btn.textContent = 'Predicting...';
+      resultBox.style.display = 'none';
+
+      const payload = {
+        tenure: parseInt(document.getElementById('tenure').value, 10),
+        MonthlyCharges: parseFloat(document.getElementById('MonthlyCharges').value),
+        TotalCharges: parseFloat(document.getElementById('TotalCharges').value),
+        Contract: document.getElementById('Contract').value,
+        InternetService: document.getElementById('InternetService').value,
+        OnlineSecurity: document.getElementById('OnlineSecurity').value,
+        TechSupport: document.getElementById('TechSupport').value,
+        PaperlessBilling: document.getElementById('PaperlessBilling').value,
+        PaymentMethod: document.getElementById('PaymentMethod').value
+      };
+
+      try {
+        const res = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        resultBox.style.display = 'block';
+
+        if (res.ok) {
+          const isChurn = data.churn_prediction === 1;
+          resultBox.className = isChurn ? 'result-churn' : 'result-retained';
+          resultBox.innerHTML =
+            '<strong>Prediction:</strong> ' + data.churn_label + '<br>' +
+            '<strong>Risk Level:</strong> ' + data.risk_level + '<br>' +
+            '<strong>Churn Probability:</strong> ' + (data.churn_probability * 100).toFixed(2) + '%';
+        } else {
+          resultBox.className = 'result-error';
+          resultBox.textContent = 'Unable to make prediction. Please check the entered values.';
+        }
+      } catch (err) {
+        resultBox.style.display = 'block';
+        resultBox.className = 'result-error';
+        resultBox.textContent = 'Unable to make prediction. Please check the entered values.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Predict Churn';
+      }
+    }
+  </script>
+</body>
+</html>"""
