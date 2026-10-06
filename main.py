@@ -52,44 +52,50 @@ class ChurnPredictionResponse(BaseModel):
 @app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 @app.api_route("/test", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def interactive_tester():
-    """Minimal, clean interactive test interface for assignment demonstration."""
+    """Compact, clean interactive test interface fitting completely in one desktop viewport."""
     return """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Customer Churn Prediction</title>
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background: #f1f5f9;
       color: #0f172a;
       margin: 0;
-      padding: 40px 20px;
+      padding: 16px 12px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
     }
     .card {
-      max-width: 520px;
-      margin: 0 auto;
+      width: 100%;
+      max-width: 640px;
       background: #ffffff;
-      padding: 30px;
+      padding: 18px 24px 16px;
       border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
       border: 1px solid #e2e8f0;
     }
     .header-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
     h2 {
       margin: 0;
-      font-size: 22px;
+      font-size: 20px;
+      font-weight: 700;
       color: #0f172a;
     }
     .status-badge {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
-      padding: 3px 8px;
+      padding: 2px 8px;
       border-radius: 12px;
       background: #e2e8f0;
       color: #64748b;
@@ -104,29 +110,36 @@ def interactive_tester():
     }
     p.subtitle {
       color: #64748b;
-      font-size: 14px;
-      margin-top: 4px;
-      margin-bottom: 22px;
+      font-size: 13px;
+      margin: 2px 0 12px;
+    }
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px 14px;
     }
     .form-group {
-      margin-bottom: 12px;
+      margin-bottom: 0;
+    }
+    .full-width {
+      grid-column: span 2;
     }
     label {
       display: block;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: #334155;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
     input[type="number"], select {
       width: 100%;
-      box-sizing: border-box;
-      padding: 9px 12px;
-      font-size: 14px;
+      padding: 6px 10px;
+      font-size: 13px;
       border: 1px solid #cbd5e1;
-      border-radius: 6px;
+      border-radius: 5px;
       background: #ffffff;
       color: #0f172a;
+      height: 33px;
     }
     input:focus, select:focus {
       outline: none;
@@ -134,15 +147,16 @@ def interactive_tester():
     }
     button {
       width: 100%;
-      padding: 12px;
-      margin-top: 14px;
-      font-size: 15px;
+      padding: 9px;
+      margin-top: 10px;
+      font-size: 14px;
       font-weight: 600;
       color: #ffffff;
       background: #2563eb;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      transition: background 0.15s;
     }
     button:hover {
       background: #1d4ed8;
@@ -152,12 +166,12 @@ def interactive_tester():
       cursor: not-allowed;
     }
     #result-box {
-      margin-top: 20px;
-      padding: 16px;
+      margin-top: 10px;
+      padding: 10px 14px;
       border-radius: 6px;
       display: none;
-      font-size: 14px;
-      line-height: 1.6;
+      font-size: 13px;
+      line-height: 1.5;
     }
     .result-churn {
       background: #fef2f2;
@@ -174,6 +188,14 @@ def interactive_tester():
       border: 1px solid #facc15;
       color: #92400e;
     }
+    @media (max-width: 540px) {
+      .grid-container {
+        grid-template-columns: 1fr;
+      }
+      .full-width {
+        grid-column: span 1;
+      }
+    }
   </style>
 </head>
 <body>
@@ -185,73 +207,75 @@ def interactive_tester():
     <p class="subtitle">Enter customer details to estimate churn risk.</p>
 
     <form id="churn-form" onsubmit="event.preventDefault(); predictChurn();">
-      <div class="form-group">
-        <label for="tenure">Tenure (months)</label>
-        <input type="number" id="tenure" min="0" max="120" value="2" required>
-      </div>
+      <div class="grid-container">
+        <div class="form-group">
+          <label for="tenure">Tenure (months)</label>
+          <input type="number" id="tenure" min="0" max="120" value="2" required>
+        </div>
 
-      <div class="form-group">
-        <label for="MonthlyCharges">Monthly Charges ($)</label>
-        <input type="number" id="MonthlyCharges" step="0.01" min="0" value="89.90" required>
-      </div>
+        <div class="form-group">
+          <label for="MonthlyCharges">Monthly Charges ($)</label>
+          <input type="number" id="MonthlyCharges" step="0.01" min="0" value="89.90" required>
+        </div>
 
-      <div class="form-group">
-        <label for="TotalCharges">Total Charges ($)</label>
-        <input type="number" id="TotalCharges" step="0.01" min="0" value="179.80" required>
-      </div>
+        <div class="form-group">
+          <label for="TotalCharges">Total Charges ($)</label>
+          <input type="number" id="TotalCharges" step="0.01" min="0" value="179.80" required>
+        </div>
 
-      <div class="form-group">
-        <label for="Contract">Contract</label>
-        <select id="Contract">
-          <option value="Month-to-month" selected>Month-to-month</option>
-          <option value="One year">One year</option>
-          <option value="Two year">Two year</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="Contract">Contract</label>
+          <select id="Contract">
+            <option value="Month-to-month" selected>Month-to-month</option>
+            <option value="One year">One year</option>
+            <option value="Two year">Two year</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="InternetService">Internet Service</label>
-        <select id="InternetService">
-          <option value="Fiber optic" selected>Fiber optic</option>
-          <option value="DSL">DSL</option>
-          <option value="No">No</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="InternetService">Internet Service</label>
+          <select id="InternetService">
+            <option value="Fiber optic" selected>Fiber optic</option>
+            <option value="DSL">DSL</option>
+            <option value="No">No</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="OnlineSecurity">Online Security</label>
-        <select id="OnlineSecurity">
-          <option value="No" selected>No</option>
-          <option value="Yes">Yes</option>
-          <option value="No internet service">No internet service</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="OnlineSecurity">Online Security</label>
+          <select id="OnlineSecurity">
+            <option value="No" selected>No</option>
+            <option value="Yes">Yes</option>
+            <option value="No internet service">No internet service</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="TechSupport">Tech Support</label>
-        <select id="TechSupport">
-          <option value="No" selected>No</option>
-          <option value="Yes">Yes</option>
-          <option value="No internet service">No internet service</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="TechSupport">Tech Support</label>
+          <select id="TechSupport">
+            <option value="No" selected>No</option>
+            <option value="Yes">Yes</option>
+            <option value="No internet service">No internet service</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="PaperlessBilling">Paperless Billing</label>
-        <select id="PaperlessBilling">
-          <option value="Yes" selected>Yes</option>
-          <option value="No">No</option>
-        </select>
-      </div>
+        <div class="form-group">
+          <label for="PaperlessBilling">Paperless Billing</label>
+          <select id="PaperlessBilling">
+            <option value="Yes" selected>Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
 
-      <div class="form-group">
-        <label for="PaymentMethod">Payment Method</label>
-        <select id="PaymentMethod">
-          <option value="Electronic check" selected>Electronic check</option>
-          <option value="Mailed check">Mailed check</option>
-          <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
-          <option value="Credit card (automatic)">Credit card (automatic)</option>
-        </select>
+        <div class="form-group full-width">
+          <label for="PaymentMethod">Payment Method</label>
+          <select id="PaymentMethod">
+            <option value="Electronic check" selected>Electronic check</option>
+            <option value="Mailed check">Mailed check</option>
+            <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
+            <option value="Credit card (automatic)">Credit card (automatic)</option>
+          </select>
+        </div>
       </div>
 
       <button type="submit" id="btn-predict">Predict Churn</button>
