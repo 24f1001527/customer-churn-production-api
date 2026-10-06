@@ -49,7 +49,7 @@ class ChurnPredictionResponse(BaseModel):
     churn_probability: float = Field(..., description="Estimated probability of churning (0.0 to 1.0)")
     risk_level: str = Field(..., description="'High', 'Medium', or 'Low'")
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
     return {
         "message": "Customer Churn Prediction API is running.",
