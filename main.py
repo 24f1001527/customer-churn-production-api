@@ -49,57 +49,8 @@ class ChurnPredictionResponse(BaseModel):
     churn_probability: float = Field(..., description="Estimated probability of churning (0.0 to 1.0)")
     risk_level: str = Field(..., description="'High', 'Medium', or 'Low'")
 
-@app.api_route("/", methods=["GET", "HEAD"])
-def root():
-    return {
-        "message": "Customer Churn Prediction API is running.",
-        "docs_url": "/docs",
-        "health_check": "/health",
-        "interactive_tester": "/test"
-    }
-
-@app.get("/health")
-def health():
-    """Health check endpoint required by deployment platforms and load balancers."""
-    return {
-        "status": "ok",
-        "model_loaded": pipeline is not None
-    }
-
-@app.post("/predict", response_model=ChurnPredictionResponse)
-def predict(customer: CustomerData):
-    """Predicts customer churn probability and classification based on account & service features."""
-    if pipeline is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Model artifact is not loaded. Ensure model.pkl is present."
-        )
-
-    # Convert request to single-row pandas DataFrame
-    input_df = pd.DataFrame([customer.model_dump()])
-
-    try:
-        pred = int(pipeline.predict(input_df)[0])
-        probas = pipeline.predict_proba(input_df)[0]
-        churn_prob = float(probas[1])
-
-        if churn_prob >= 0.70:
-            risk = "High"
-        elif churn_prob >= 0.40:
-            risk = "Medium"
-        else:
-            risk = "Low"
-
-        return ChurnPredictionResponse(
-            churn_prediction=pred,
-            churn_label="Churn" if pred == 1 else "Retained",
-            churn_probability=round(churn_prob, 4),
-            risk_level=risk
-        )
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Inference error: {str(e)}")
-
-@app.get("/test", response_class=HTMLResponse)
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@app.api_route("/test", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def interactive_tester():
     """Minimal, clean interactive test interface for assignment demonstration."""
     return """<!DOCTYPE html>
@@ -384,3 +335,45 @@ def interactive_tester():
   </script>
 </body>
 </html>"""
+
+@app.get("/health")
+def health():
+    """Health check endpoint required by deployment platforms and load balancers."""
+    return {
+        "status": "ok",
+        "model_loaded": pipeline is not None
+    }
+
+@app.post("/predict", response_model=ChurnPredictionResponse)
+def predict(customer: CustomerData):
+    """Predicts customer churn probability and classification based on account & service features."""
+    if pipeline is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Model artifact is not loaded. Ensure model.pkl is present."
+        )
+
+    # Convert request to single-row pandas DataFrame
+    input_df = pd.DataFrame([customer.model_dump()])
+
+    try:
+        pred = int(pipeline.predict(input_df)[0])
+        probas = pipeline.predict_proba(input_df)[0]
+        churn_prob = float(probas[1])
+
+        if churn_prob >= 0.70:
+            risk = "High"
+        elif churn_prob >= 0.40:
+            risk = "Medium"
+        else:
+            risk = "Low"
+
+        return ChurnPredictionResponse(
+            churn_prediction=pred,
+            churn_label="Churn" if pred == 1 else "Retained",
+            churn_probability=round(churn_prob, 4),
+            risk_level=risk
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Inference error: {str(e)}")
+
